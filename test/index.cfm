@@ -9,7 +9,7 @@
 	<cfexit method="exittemplate" />
 </cfif>
 
-<cfdump eval="fileDelete('/azuremapping/test.txt')" />
+<cfdump eval="fileExists('/azuremapping/test.txt')" />
 <cfdump eval="fileWrite('/azuremapping/test.txt', 'Hello world')" />
 <cfdump eval="fileAppend('/azuremapping/test.txt', ' and beyond')" />
 <cfdump eval="fileRead('/azuremapping/test.txt')" />
@@ -19,3 +19,5 @@
 </cfloop>
 
 <cfdump eval="directoryList('/azuremapping')" />
+
+<cfdump eval="fileDelete('/azuremapping/test.txt')" />

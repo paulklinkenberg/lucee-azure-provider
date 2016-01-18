@@ -24,7 +24,9 @@
 	private function addMappings() {
 		// Azure settings
 		local.accessKey = "";
+		if (local.accessKey eq "") {
 				throw("You need to add an accessKey to the Azure storage account! Or ask Paul Klinkenberg if he sent this test stuff to you.");
+		}
 		local.storageName = "luceetesting";
 		local.containerName = "mycontainer";
 
