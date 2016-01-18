@@ -3,12 +3,6 @@ component {
 	variables.storageConnectionString="";
 	variables.container = "";
 
-	function init(){
-		variables.mimeTypeObj = new com.railodeveloper.file.MimeType();
-		return this;
-	}
-
-
 	function debuglog(txt) {
 		log text=txt type="information" file="azure";
 	}
@@ -22,6 +16,9 @@ component {
 		    "AccountName=#arguments.accountName#;" &
 		    "AccountKey=#arguments.accountKey#";
 		variables.container = arguments.container;
+
+		variables.mimeTypeObj = new com.railodeveloper.file.MimeType();
+
 		return this;
 	}
 
