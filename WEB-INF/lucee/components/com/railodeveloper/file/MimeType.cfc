@@ -1,10 +1,12 @@
 component {
 
 	function init(){
+/*
 		variables.MimeUtilObj = createObject('java', 'eu.medsea.mimeutil.MimeUtil');
 		MimeUtilObj.registerMimeDetector("eu.medsea.mimeutil.detector.ExtensionMimeDetector");
 		MimeUtilObj.registerMimeDetector("eu.medsea.mimeutil.detector.MagicMimeMimeDetector");
 		MimeUtilObj.registerMimeDetector("eu.medsea.mimeutil.detector.OpendesktopMimeDetector");
+*/
 
 		return this;
 	}
@@ -19,12 +21,12 @@ component {
 			return variables.ext2Mimetype[local.ext];
 		}
 
-		/* Option 2: let MimeUtils try */
+		/* Option 2: let MimeUtils try
 		local.ret = MimeUtilObj.getMimeTypes(arguments.filepath);
 		local.ret = listFirst(ret.toString(), ',');
 		if (local.ret neq MimeUtilObj.UNKNOWN_MIME_TYPE.toString()) {
 			return local.ret;
-		}
+		}*/
 
 		/* Option 3: let CFML try with the BIF fileGetMimeType */
 		return fileGetMimeType(arguments.filepath);
