@@ -5,13 +5,13 @@
 
 
 	<resources>
-		<!--- the following 2 are default: --->
+<!-- the following 2 are default: -->
     	<resource-provider arguments="case-sensitive:true;lock-timeout:1000;" class="lucee.commons.io.res.type.ram.RamResourceProvider" scheme="ram"/>
     	<resource-provider arguments="lock-timeout:10000;" class="lucee.commons.io.res.type.s3.S3ResourceProvider" scheme="s3"/>
 
-<!--- Add the following line to your lucee-web.xml.cfm: --->
+<!-- Add the following line to your lucee-web.xml.cfm: -->
 	    <resource-provider arguments="case-sensitive:true;" component="AzureBlobResourceProvider" scheme="azure"/>
-<!--- end Add --->
+<!-- end Add -->
 	</resources>
 
 
