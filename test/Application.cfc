@@ -5,7 +5,7 @@
 	{
 		/* reload the page, if this was the very first request in this web context */
 		if (structKeyExists(request, "reloadRequest")) {
-			location url="#cgi.script_name#?#cgi.query_string#" addtoken="no";
+			location url="#cgi.script_name#?reloaded=1&#cgi.query_string#" addtoken="no";
 		}
 		
 		addMappings();
@@ -25,7 +25,8 @@
 		// Azure settings
 		local.accessKey = "";
 		if (local.accessKey eq "") {
-				throw("You need to add an accessKey to the Azure storage account! Or ask Paul Klinkenberg if he sent this test stuff to you.");
+				throw("You need to add an accessKey to the Azure storage account settings in Application.cfc! " &
+						"Or ask Paul Klinkenberg if he sent this test stuff to you.");
 		}
 		local.storageName = "luceetesting";
 		local.containerName = "mycontainer";
