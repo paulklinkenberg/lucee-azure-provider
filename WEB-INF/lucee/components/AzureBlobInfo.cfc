@@ -1,8 +1,8 @@
 component accessors="true"
 {
 	property name="blobObject" type="any";
-	property name="isDirectory" type="boolean";
-	property name="isFile" type="boolean";
+	property name="isDirectory" type="boolean" default="false";
+	property name="isFile" type="boolean" default="false";
 
 	function debuglog(txt) {
 		var extra = '| isDirectory:#getIsDirectory()#, isFile:#getIsFile()#';
@@ -11,19 +11,19 @@ component accessors="true"
 
 	public void function setIsDirectory(required boolean b)
 	{
-		debuglog("AzureBlobinfo setIsDirectory #b#");
 		variables.isDirectory = b;
 		if (arguments.b) {
 			variables.isFile = false;
 		}
+		debuglog("AzureBlobinfo setIsDirectory #b# AFTER");
 	}
 	public void function setIsFile(required boolean b)
 	{
-		debuglog("AzureBlobinfo setIsFile #b#");
 		variables.isFile = b;
 		if (arguments.b) {
 			variables.isDirectory = false;
 		}
+		debuglog("AzureBlobinfo setIsFile #b# AFTER");
 	}
 
 
