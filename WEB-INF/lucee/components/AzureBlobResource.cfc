@@ -30,6 +30,7 @@ component accessors="true" {
 		debuglog("azureblobresource init end");
 		return this;
 	}
+
 	
 /*  PK: not required? Can't be found in S3Resource
 
@@ -39,12 +40,12 @@ component accessors="true" {
 		return children[name] = new RAM2Resource(variables.provider,arguments.parent,arguments.name);
 	}
 */
+
 	public component function getChild(component parent,string name){
 		debuglog("azureblobresource getChild #serialize(arguments)#");
 		throw('Not implemented');
 	}
 
-	
 	
 	public boolean function isReadable() {
 		debuglog("azureblobresource isReadable");
@@ -103,7 +104,9 @@ component accessors="true" {
 			return true;
 		}
 		if (not isNull(info.getBlobObject())) {
-			debuglog("azureblobresource exists end, info.getBlobObject().exists(): #info.getBlobObject().exists()#");
+			local.exists = info.getBlobObject().exists();
+			debuglog("azureblobresource exists end, info.getBlobObject().exists(): #local.exists#");
+			return local.exists;
 		} else {
 			debuglog("azureblobresource exists ERROR: info.getBlobObject() is NULL, but is not a directory as well!");
 		}
@@ -405,15 +408,15 @@ component accessors="true" {
 
 	private AzureBlobInfo function getInfo(Boolean reload=false)
 	{
-		debuglog("azureblobresource getInfo #serialize(arguments)#");
 		if (!isNull(variables.infoObject) && !arguments.reload)
 			return variables.infoObject;
 
+		debuglog("azureblobresource getInfo #serialize(arguments)#, creating new AzureBlobInfo");
 		local.info = new AzureBlobInfo();
 		local.info.setIsDirectory(variables.storageHandler.directoryExists(variables.settings.getFileName()));
 		if (not local.info.getIsDirectory())
 		{
-			local.info.setBlobObject(variables.storageHandler.getFile(variables.settings.getFileName()));
+			local.info.setBlobObject( variables.storageHandler.getFile(variables.settings.getFileName()) );
 			local.info.setIsFile( local.info.getBlobObject().exists() );
 		}
 		return variables.infoObject = local.info;
