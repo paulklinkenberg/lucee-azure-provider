@@ -33,6 +33,23 @@ component
 	
 	public function getNullValue(){ return; }
 
+
+	variables._blobStorageObjects = {};
+	private any function _getBlobStorageObject(required AzureBlobSettings blobSettings) {
+		local.key = "/" & arguments.blobSettings.getAccessKey() & "@"  & arguments.blobSettings.getAccountName() & ".blob.core.windows.net/" & arguments.blobSettings.getContainer();
+		debuglog("_getBlobStorageObject(#local.key#)");
+
+		if (not structKeyExists(variables._blobStorageObjects, local.key)) {
+			variables._blobStorageObjects[local.key] = new com.railodeveloper.azure.BlobStorage(
+				  accountName =	arguments.blobSettings.getAccountName()
+				, accountKey =	arguments.blobSettings.getAccessKey()
+				, container = 	arguments.blobSettings.getContainer()
+			);
+		}
+		return variables._blobStorageObjects[local.key];
+	}
+
+
 	/**
 	* returns a resource that match the given path
 	*/
@@ -40,28 +57,11 @@ component
 	{
 		debuglog("AzureBlobResourceProvider getResource #serialize(arguments)#");
 		local.settings = new AzureBlobSettings();
-		local.pathData = _parsePath(arguments.path, local.settings);
+		_parsePath(arguments.path, local.settings);
 
-		/* don't want to be instantiating gazillion objects, so passing it along */
-		try {
-			local.storageHandler = new com.railodeveloper.azure.BlobStorage(
-				  accountName=local.settings.getAccountName()
-				, accountKey=local.settings.getAccessKey()
-				, container = local.settings.getContainer());
-
-			local.ret = new AzureBlobResource(local.settings, this, local.storageHandler);
-		} catch(any e) {
-			debuglog("AzureBlobResourceProvider getResource ERROR: #e.message# #e.detail#");
-/*
-			savecontent variable="local.debugtext" {
-				writeDump(e);
-			};
-			fileWrite(expandPath('/debug.html'), debugText);
-*/
-			rethrow;
-		}
-
-		return local.ret;
+		local.storageHandler = _getBlobStorageObject(local.settings);
+		// ToDo: caching the resources on a request-basis
+		return new AzureBlobResource(local.settings, this, local.storageHandler);
 	}
 
 	
@@ -93,7 +93,7 @@ component
 	private void function _parsePath(required String path, required AzureBlobSettings ab)
 	{
 		debuglog("AzureBlobResourceProvider _parsePath #serialize(arguments)#");
-		// abs://accessKey@account-name.blob.core.windows.net/container-name/folder/file.txt
+		// azure://accessKey@account-name.blob.core.windows.net/container-name/folder/file.txt
 		// Note: access-key can contain slashes!
 
 		/* clean path, remove scheme
@@ -104,7 +104,7 @@ component
 		local.pathNoScheme = replace(local.pathNoScheme, '\', '/', 'all');
 
 		local.accessKey = listFirst(local.pathNoScheme, '@');
-		local.uri = listDeleteAt(local.pathNoScheme, 1, '@');
+		local.uri = listRest(local.pathNoScheme, '@');
 
 		if (local.accessKey eq "" or local.uri eq "" or listLen(local.uri, '/') lt 2
 				or not find('blob.core.windows.net/', local.uri))
