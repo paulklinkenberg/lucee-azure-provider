@@ -87,9 +87,11 @@ component accessors="true" {
 			{
 				variables.storageHandler.deleteFile(trailSlash(getInnerPath()));
 			}
-
-		} else
+			getInfo().setIsDirectory(false);
+		} else {
 			variables.storageHandler.deleteFile(getInnerPath());
+			getInfo().setIsFile(false);
+		}
 		debuglog("azureblobresource remove end");
 	}
 	
@@ -103,14 +105,16 @@ component accessors="true" {
 			debuglog("azureblobresource exists says isDirectory==true");
 			return true;
 		}
-		if (not isNull(info.getBlobObject())) {
-			local.exists = info.getBlobObject().exists();
-			debuglog("azureblobresource exists end, info.getBlobObject().exists(): #local.exists#");
-			return local.exists;
-		} else {
-			debuglog("azureblobresource exists ERROR: info.getBlobObject() is NULL, but is not a directory as well!");
+		if (info.getIsFile() eq false) {
+			debuglog("azureblobresource exists says isDirectory=false AND isFile=false");
+			return false;
 		}
-		return info.getIsFile();
+		if (isNull(info.getBlobObject())) {
+			info.setBlobObject(variables.storageHandler.getFile(variables.settings.getFileName()));
+		}
+		local.exists = info.getBlobObject().exists();
+		debuglog("azureblobresource exists end, info.getBlobObject().exists(): #local.exists#");
+		return local.exists;
 	}
 
 
@@ -178,7 +182,7 @@ component accessors="true" {
 
 	public boolean function isDirectory()
 	{
-		debuglog("azureblobresource isdirectory {}");
+		debuglog("azureblobresource isdirectory, return: #getInfo().getIsDirectory()#");
 		return getInfo().getIsDirectory();
 	}
 
@@ -368,14 +372,16 @@ component accessors="true" {
 	public void function setBinary(required any content)
 	{
 		debuglog("azureblobresource setBinary #serialize(arguments)#");
-		if (exists() && !isFile())
+		if (exists() && isDirectory())
 			throw("Can't save file contents, path [#getInnerPath()#] is a directory");
 
 		local.filePath = createTempFilePath();
 		fileWrite(local.filePath, arguments.content);
 		variables.storageHandler.writeFile(local.filePath, getInnerPath());
-
 		tryDeleteFile(local.filePath);
+
+		/* Now make sure this resource is marked as isFile=true */
+		getInfo().setIsFile(true);
 	}
 
 

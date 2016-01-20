@@ -17,6 +17,7 @@ component accessors="true"
 		}
 		debuglog("AzureBlobinfo setIsDirectory #b# AFTER");
 	}
+
 	public void function setIsFile(required boolean b)
 	{
 		variables.isFile = b;
@@ -27,7 +28,18 @@ component accessors="true"
 	}
 
 
+	public void function setBlobObject(required any obj)
+	{
+		variables.blobObject = arguments.obj;
+		if (variables.blobObject.exists()) {
+			debuglog("AzureBlobinfo setBlobObject > exists()=true");
+			setIsFile(true);
+		}
+		debuglog("AzureBlobinfo setBlobObject [object] AFTER");
+	}
+
+
 	public boolean function exists() {
-		return getIsFile() || getIsDirectory();
+		return getIsDirectory() || (getIsFile() && (isNull(getBlobObject()) || getBlobObject().exists()));
 	}
 }
