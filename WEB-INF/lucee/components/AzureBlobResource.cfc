@@ -371,7 +371,7 @@ component accessors="true" {
 	// used when argument "use-stream" is set to false
 	public void function setBinary(required any content)
 	{
-		debuglog("azureblobresource setBinary #serialize(arguments)#");
+		debuglog("azureblobresource setBinary {content=...}");
 		if (exists() && isDirectory())
 			throw("Can't save file contents, path [#getInnerPath()#] is a directory");
 
