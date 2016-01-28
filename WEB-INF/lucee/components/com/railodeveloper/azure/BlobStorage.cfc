@@ -230,9 +230,9 @@ component {
 		import com.microsoft.windowsazure.services.blob.client.*;
 	*/
 	variables.objectPaths = {
-		  "BlobContainerPermissions" = "com.microsoft.windowsazure.services.blob.client.BlobContainerPermissions"
-		, "BlobContainerPublicAccessType" = "com.microsoft.windowsazure.services.blob.client.BlobContainerPublicAccessType"
-		, "BlobListingDetails" = "com.microsoft.windowsazure.services.blob.client.BlobListingDetails"
+		  "BlobContainerPermissions" = "com.microsoft.azure.storage.blob.BlobContainerPermissions"
+		, "BlobContainerPublicAccessType" = "com.microsoft.azure.storage.blob.BlobContainerPublicAccessType"
+		, "BlobListingDetails" = "com.microsoft.azure.storage.blob.BlobListingDetails"
 	};
 
 	private Any function createJObject(required String name, Boolean clientPackage=false)
@@ -240,7 +240,7 @@ component {
 		debuglog("BlobStorage createJObject #serialize(arguments)#");
 		if (structKeyExists(variables.objectPaths, arguments.name))
 			return createObject('java', variables.objectPaths[arguments.name]);
-		return createObject('java', 'com.microsoft.windowsazure.services.core.storage.#arguments.name#');
+		return createObject('java', 'com.microsoft.azure.storage.#arguments.name#');
 	}
 
 
