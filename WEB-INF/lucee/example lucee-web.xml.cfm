@@ -12,6 +12,7 @@
 <!-- Add the following line to your lucee-web.xml.cfm: -->
 	    <resource-provider arguments="case-sensitive:true;" component="AzureBlobResourceProvider" scheme="azure"/>
 <!-- end Add -->
+
 	</resources>
 
 
@@ -23,6 +24,17 @@
 	<scheduler directory="{lucee-web}/scheduler/"/>
 	<mappings>
 		<mapping archive="{lucee-web}/context/lucee-context.lar" physical="{lucee-web}/context/" primary="physical" readonly="yes" toplevel="yes" trusted="true" virtual="/lucee/"/>
+
+<!-- This is an example mapping, which can be created from the web/server admin, section "Mappings": -->
+<!--
+		<mapping physical="azure://myPrivateStorageKey@myStorageName.blob.core.windows.net/myContainerName"
+				 primary="physical"
+				 readonly="false"
+				 toplevel="true"
+				 virtual="/azuremapping"/>
+-->
+<!-- end Example mapping -->
+
 	</mappings>
 	<custom-tag>
 		<mapping physical="{lucee-web}/customtags/" trusted="yes"/>
