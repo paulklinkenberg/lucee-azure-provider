@@ -49,31 +49,43 @@ component {
 
 		local.container = getContainer();
 
-		// ToDo: implement maxFiles
-		if (arguments.recurse)
-		{
-			local.enumSet = createObject('java', 'java.util.EnumSet').noneOf(createJObject('BlobListingDetails').getClass());
-			local.files = local.container.listBlobs(arguments.startsWith, arguments.recurse, local.enumSet, nullValue(), nullValue()).iterator();
-		} else
-		{
-			local.files = local.container.listBlobs(arguments.startsWith).iterator();
-		}
-
+		local.checkMore = true;
+		local.segmentToken = nullValue();
 		local.ret = [];
-		while (local.files.hasNext() && (arguments.maxFiles lt 1 or arguments.maxFiles lt local.ret.len()))
-		{
-			if (arguments.javaObjects)
-				local.ret.append(local.files.next())
-			else
+
+		while (local.checkMore) {
+			if (arguments.recurse)
 			{
-				local.o = local.files.next();
-				if (local.o.getClass().getName() eq 'com.microsoft.windowsazure.services.blob.client.CloudBlockBlob')
-					local.ret.append(local.o.getName());
+				local.enumSet = createObject('java', 'java.util.EnumSet').noneOf(createJObject('BlobListingDetails').getClass());
+				local.listResult = local.container.ListBlobsSegmented(arguments.startsWith, arguments.recurse, local.enumSet
+						, (maxFiles==-1 ? nullValue() : maxFiles)
+						, local.segmentToken, nullValue(), nullValue());
+			} else
+			{
+				local.listResult = local.container.listBlobsSegmented(arguments.startsWith);
+			}
+
+			local.segmentToken = local.listResult.getContinuationToken();
+			if (isNull(local.segmentToken))
+				local.checkMore = false;
+
+			local.files = listResult.getResults().iterator();
+
+			while (local.files.hasNext() && (arguments.maxFiles lt 1 or arguments.maxFiles lt local.ret.len()))
+			{
+				if (arguments.javaObjects)
+					local.ret.append(local.files.next())
 				else
 				{
-					local.ret.append(rereplace(replace(local.o.getURI().toString(), local.container.getURI().toString(), ''), '(^/|/$)', '', 'all'));
-				}
+					local.o = local.files.next();
+					if (local.o.getClass().getName() eq 'com.microsoft.azure.storage.blob.CloudBlockBlob')
+						local.ret.append(local.o.getName());
+					else
+					{
+						local.ret.append(rereplace(replace(local.o.getURI().toString(), local.container.getURI().toString(), ''), '(^/|/$)', '', 'all'));
+					}
 
+				}
 			}
 		}
 		debuglog("BlobStorage listFiles end, returns #local.ret.len()# files");
