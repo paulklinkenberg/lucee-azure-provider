@@ -72,7 +72,7 @@ component accessors="true" {
 
 		if (isDirectory())
 		{
-			local.aJavaFiles = variables.storageHandler.listFiles(getInnerPath(), true, true);
+			local.aJavaFiles = variables.storageHandler.listFiles(startsWith=getInnerPath(), recurse=true, asJavaObjects=true);
 			if (!force && arrayLen(local.aJavaFiles)) {
 				debuglog("Can't delete directory ["&getInnerPath()&"], the directory is not empty.");
 				throw("Can't delete directory ["&getInnerPath()&"], the directory is not empty.");
@@ -308,19 +308,22 @@ component accessors="true" {
 
 	public void function createDirectory(boolean createParentWhenNotExists)
 	{
-		debuglog("azureblobresource createDirectory #serialize(arguments)#");
-		// add trailing slash to filename, if there isn't one yet
-		if (right(variables.settings.getFileName(), 1) neq "/")
-			variables.settings.setFileName( variables.settings.getFileName() & "/" );
-
-		local.emptyFile = createEmptyFile();
-
-		// create a file '.' inside this directory path
-		variables.storageHandler.writeFile(local.emptyFile, getInnerPath() & ".");
-
-		tryDeleteFile(local.emptyFile);
-
 		//throw("Can't create directory; directories in Azure Blob Storage are only virtual (file names can have slashes in them to mimic a directory structure)");
+		debuglog("azureblobresource createDirectory #serialize(arguments)#");
+
+		if (exists())
+		{
+			if (isDirectory())
+				throw("Can't create directory [#getInnerPath()#], directory already exists.");
+			if (isFile())
+				throw("Can't create directory [#getInnerPath()#], a file with the same name already exists.");
+		}
+
+		variables.storageHandler.createDirectory(getInnerPath());
+
+		/* update info */
+		getInfo(true);
+
 		debuglog("azureblobresource createDirectory end");
 	}
 
@@ -419,7 +422,7 @@ component accessors="true" {
 			return variables.infoObject;
 
 		debuglog("azureblobresource getInfo #serialize(arguments)#, creating new AzureBlobInfo");
-		local.info = new AzureBlobInfo();
+		local.info = isNull(variables.infoObject) ? new AzureBlobInfo() : variables.infoObject.reinit();
 		local.info.setIsDirectory(variables.storageHandler.directoryExists(variables.settings.getFileName()));
 		if (not local.info.getIsDirectory())
 		{

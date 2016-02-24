@@ -9,6 +9,7 @@ component accessors="true"
 		log text="#txt##extra#" type="information" file="azure";
 	}
 
+
 	public void function setIsDirectory(required boolean b)
 	{
 		variables.isDirectory = b;
@@ -41,5 +42,13 @@ component accessors="true"
 
 	public boolean function exists() {
 		return getIsDirectory() || (getIsFile() && (isNull(getBlobObject()) || getBlobObject().exists()));
+	}
+
+
+	public any function reinit() {
+		variables.isDirectory = false;
+		variables.isFile = false;
+		variables.blobObject = nullValue();
+		return this;
 	}
 }

@@ -1,11 +1,15 @@
 component {
 
+	variables.directoryCreateFilename = ".__directory_placeholder__";
+
 	variables.storageConnectionString="";
 	variables.container = "";
+
 
 	function debuglog(txt) {
 		log text=txt type="information" file="azure";
 	}
+
 
 	public com.railodeveloper.azure.BlobStorage function init(required String accountName, required String accountKey, required String container, Boolean useHttps=true)
 	{
@@ -17,6 +21,8 @@ component {
 		    "AccountKey=#arguments.accountKey#";
 		variables.container = arguments.container;
 
+		variables.listingEnumSet = createObject('java', 'java.util.EnumSet').noneOf(createJObject('BlobListingDetails').getClass());
+
 		return this;
 	}
 
@@ -26,21 +32,38 @@ component {
 		debuglog("BlobStorage directoryExists #serialize(arguments)#");
 		if (arguments.directory eq "/" or arguments.directory eq "")
 			return true;
-		/* ToDo: add new attribute maxFiles in method listFiles (directoryExists only needs to check if there's at least one file) */
-		return not arrayIsEmpty(listDirectory(directory=arguments.directory, javaObjects=true, maxFiles=1));
+		if (right(arguments.directory, 1) neq "/")
+				arguments.directory &= "/";
+
+		local.aDirFiles = listFiles(startsWith=arguments.directory, recurse=true, asJavaObjects=true, maxFiles=1);
+
+		return local.aDirFiles.len() gt 0;
 	}
 
 
-	public Array function listDirectory(required String directory, Boolean javaObjects=false, Boolean recurse=false, numeric maxFiles=-1)
+	public Array function listDirectory(required String directory, Boolean recurse=false, numeric maxFiles=-1)
 	{
 		debuglog("BlobStorage listDirectory #serialize(arguments)#");
 		if (right(arguments.directory, 1) neq "/")
 				arguments.directory &= "/";
-		return listFiles(arguments.directory, arguments.javaObjects, arguments.recurse, arguments.maxFiles);
+		local.files = listFiles(arguments.directory, arguments.recurse, arguments.maxFiles);
+		return local.files;
 	}
 
 
-	public Array function listFiles(String startsWith="", Boolean javaObjects=false, Boolean recurse=false, numeric maxFiles=-1)
+	public void function createDirectory(required String directory)
+	{
+		debuglog("BlobStorage createDirectory #serialize(arguments)#");
+		if (right(arguments.directory, 1) neq "/")
+				arguments.directory &= "/";
+
+		local.tmpFilePath = createEmptyFile("txt");
+		writeFile(local.tmpFilePath, arguments.directory & variables.directoryCreateFilename);
+		tryDeleteFile(local.tmpFilePath);
+	}
+
+
+	public Array function listFiles(String startsWith="", Boolean recurse=false, numeric maxFiles=-1, boolean asJavaObjects=false)
 	{
 		debuglog("BlobStorage listFiles #serialize(arguments)#");
 		/* sanitize: path cannot start with a slash */
@@ -56,10 +79,14 @@ component {
 		while (local.checkMore) {
 			if (arguments.recurse)
 			{
-				local.enumSet = createObject('java', 'java.util.EnumSet').noneOf(createJObject('BlobListingDetails').getClass());
-				local.listResult = local.container.ListBlobsSegmented(arguments.startsWith, arguments.recurse, local.enumSet
+				local.listResult = local.container.ListBlobsSegmented(
+						  arguments.startsWith
+						, arguments.recurse
+						, variables.listingEnumSet
 						, (maxFiles==-1 ? nullValue() : maxFiles)
-						, local.segmentToken, nullValue(), nullValue());
+						, (isNull(local.segmentToken) ? nullValue() : local.segmentToken)
+						, nullValue()
+						, nullValue());
 			} else
 			{
 				local.listResult = local.container.listBlobsSegmented(arguments.startsWith);
@@ -71,20 +98,20 @@ component {
 
 			local.files = listResult.getResults().iterator();
 
-			while (local.files.hasNext() && (arguments.maxFiles lt 1 or arguments.maxFiles lt local.ret.len()))
-			{
-				if (arguments.javaObjects)
-					local.ret.append(local.files.next())
+			while (local.files.hasNext() && (arguments.maxFiles lt 1 or arguments.maxFiles gt local.ret.len())) {
+				local.o = local.files.next();
+				if (arguments.asJavaObjects) {
+					local.ret.append(local.o);
+				}
+				else if (local.o.getClass().getName() eq 'com.microsoft.azure.storage.blob.CloudBlockBlob') {
+					// add the file if it is not the empty directory placeholder file
+					if (not find(variables.directoryCreateFilename, local.o.getName())) {
+						local.ret.append(local.o.getName());
+					}
+				}
 				else
 				{
-					local.o = local.files.next();
-					if (local.o.getClass().getName() eq 'com.microsoft.azure.storage.blob.CloudBlockBlob')
-						local.ret.append(local.o.getName());
-					else
-					{
-						local.ret.append(rereplace(replace(local.o.getURI().toString(), local.container.getURI().toString(), ''), '(^/|/$)', '', 'all'));
-					}
-
+					local.ret.append(rereplace(replace(local.o.getURI().toString(), local.container.getURI().toString(), ''), '(^/|/$)', '', 'all'));
 				}
 			}
 		}
@@ -273,6 +300,25 @@ component {
 
 		/* Option 3: let CFML try with the BIF fileGetMimeType */
 		return fileGetMimeType(arguments.filepath);
+	}
+
+
+	private string function createEmptyFile(required string ext) {
+		local.path = createTempFilePath(arguments.ext);
+		fileWrite(local.path, '');
+		return local.path;
+	}
+
+
+	private string function createTempFilePath(required string ext) {
+		return getTempDirectory() & createUUID() & "." & arguments.ext;
+	}
+
+
+	private string function tryDeleteFile(required string filepath) {
+		try {
+			fileDelete(arguments.filepath);
+		} catch(any e){}
 	}
 
 
