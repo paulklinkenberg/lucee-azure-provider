@@ -315,7 +315,8 @@ component accessors="true" {
 
 		local.emptyFile = createEmptyFile();
 
-		variables.storageHandler.writeFile(local.emptyFile, getInnerPath());
+		// create a file '.' inside this directory path
+		variables.storageHandler.writeFile(local.emptyFile, getInnerPath() & ".");
 
 		tryDeleteFile(local.emptyFile);
 
