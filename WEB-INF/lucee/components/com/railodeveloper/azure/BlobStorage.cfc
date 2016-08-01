@@ -94,14 +94,11 @@ component {
 						, (isNull(local.segmentToken) ? nullValue() : local.segmentToken)
 						, nullValue()
 						, nullValue());
+				local.segmentToken = local.listResult.getContinuationToken();
 			} else
 			{
 				local.listResult = local.container.listBlobsSegmented(arguments.startsWith);
 			}
-
-			local.segmentToken = local.listResult.getContinuationToken();
-			if (isNull(local.segmentToken))
-				local.checkMore = false;
 
 			local.files = listResult.getResults().iterator();
 
@@ -121,6 +118,8 @@ component {
 					local.ret.append(rereplace(replace(local.o.getURI().toString(), local.container.getURI().toString(), ''), '(^/|/$)', '', 'all'));
 				}
 			}
+			if (isNull(local.segmentToken) or local.segmentToken.hasContinuation() eq false or (maxFiles gt -1 and local.ret.len() gte maxFiles))
+				local.checkMore = false;
 		}
 		debuglog("BlobStorage listFiles end, returns #local.ret.len()# files");
 		return local.ret;
