@@ -10,7 +10,7 @@
     	<resource-provider arguments="lock-timeout:10000;" class="lucee.commons.io.res.type.s3.S3ResourceProvider" scheme="s3"/>
 
 <!-- Add the following line to your lucee-web.xml.cfm: -->
-	    <resource-provider arguments="case-sensitive:true;" component="AzureBlobResourceProvider" scheme="azure"/>
+	    <resource-provider arguments="case-sensitive:false;logging:false" component="AzureBlobResourceProvider" scheme="azure"/>
 <!-- end Add -->
 
 	</resources>

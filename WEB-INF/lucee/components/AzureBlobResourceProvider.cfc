@@ -5,11 +5,13 @@ component
 
 	variables.scheme = "azure";
 	variables.caseSensitive = true;
+	variables.logging = false;
 
 	this.root = getNullValue();
-	// this.root = new AzureBlobResource(provider=this);
 
 	function debuglog(txt) {
+		if (not variables.logging)
+			return;
 		log text=txt type="information" file="azure";
 	}
 
@@ -26,6 +28,9 @@ component
 			/* old notation with a '=' results in a key without value */
 			} else if (findNoCase('case-sensitive=false', structKeyList(arguments.args))) {
 				variables.caseSensitive = false;
+			}
+			if (structKeyExists(arguments.args, "logging") and isBoolean(arguments.args.logging)) {
+				variables.logging = arguments.args.logging ? true : false;
 			}
 		}
 		return this;
@@ -44,6 +49,7 @@ component
 				  accountName =	arguments.blobSettings.getAccountName()
 				, accountKey =	arguments.blobSettings.getAccessKey()
 				, container = 	arguments.blobSettings.getContainer()
+				, logging =		variables.logging
 			);
 		}
 		return variables._blobStorageObjects[local.key];
@@ -56,12 +62,13 @@ component
 	public component function getResource(required string path)
 	{
 		debuglog("AzureBlobResourceProvider getResource #serialize(arguments)#");
-		local.settings = new AzureBlobSettings();
+		local.settings = new AzureBlobSettings(logging=variables.logging);
 		_parsePath(arguments.path, local.settings);
 
 		local.storageHandler = _getBlobStorageObject(local.settings);
 		// ToDo: caching the resources on a request-basis
-		return new AzureBlobResource(local.settings, this, local.storageHandler);
+		return new AzureBlobResource(settings=local.settings, provider=this, storageHandler=local.storageHandler
+										, logging=variables.logging);
 	}
 
 	

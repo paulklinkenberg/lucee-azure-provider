@@ -3,8 +3,11 @@ component accessors="true"
 	property name="blobObject" type="any";
 	property name="isDirectory" type="boolean" default="false";
 	property name="isFile" type="boolean" default="false";
+	property name="logging" type="boolean" default="false";
 
 	function debuglog(txt) {
+		if (not getLogging())
+			return;
 		var extra = '| isDirectory:#getIsDirectory()#, isFile:#getIsFile()#';
 		log text="#txt##extra#" type="information" file="azure";
 	}
@@ -49,6 +52,7 @@ component accessors="true"
 		variables.isDirectory = false;
 		variables.isFile = false;
 		variables.blobObject = nullValue();
+		variables.logging = false;
 		return this;
 	}
 }

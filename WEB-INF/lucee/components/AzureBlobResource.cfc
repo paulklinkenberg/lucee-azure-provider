@@ -5,8 +5,11 @@ component accessors="true" {
 	_isFile=false;
 	children=structNew('linked');
 	_lastModified=TIME_ZERO;
+	variables.logging = false;
 
 	function debuglog(txt) {
+		if (not variables.logging)
+			return;
 		var extra = '';
 		if (structKeyExists(variables, "settings")) {
 			try {
@@ -22,11 +25,12 @@ component accessors="true" {
 	// https://github.com/getrailo/railo/blob/master/railo-java/railo-core/src/railo/commons/io/res/type/s3/S3Resource.java
 
 	public function init(required AzureBlobSettings settings, required component provider
-	                     , required component storageHandler)
+	                     , required component storageHandler, boolean logging=false)
 	{
 		variables.settings = arguments.settings;
 		variables.provider = arguments.provider;
 		variables.storageHandler = arguments.storageHandler;
+		variables.logging = arguments.logging;
 		debuglog("azureblobresource init end");
 		return this;
 	}
@@ -142,7 +146,8 @@ component accessors="true" {
 			return nullValue();
 		local.parentSettings = variables.settings.clone();
 		local.parentSettings.setFileName(getParentDirectory());
-		return new AzureBlobResource(local.parentSettings, variables.provider, variables.storageHandler);
+		return new AzureBlobResource(settings=local.parentSettings, provider=variables.provider
+									, storageHandler=variables.storageHandler, logging=variables.logging);
 	}
 
 	// https://github.com/getrailo/railo/blob/master/railo-java/railo-core/src/railo/commons/io/res/type/s3/S3Resource.java#L272
@@ -163,7 +168,8 @@ component accessors="true" {
 
 		local.newSettings = variables.settings.clone();
 		local.newSettings.setFilename(local.realPath);
-		return new AzureBlobResource(local.newSettings, variables.provider, variables.storageHandler);
+		return new AzureBlobResource(settings=local.newSettings, provider=variables.provider
+									, storageHandler=variables.storageHandler, logging=variables.logging);
 	}
 
 
@@ -236,7 +242,8 @@ component accessors="true" {
 		{
 			local.newSettings = variables.settings.clone();
 			local.newSettings.setFilename(local.path);
-			arrayAppend(arr, new AzureBlobResource(local.newSettings, variables.provider, variables.storageHandler));
+			arrayAppend(arr, new AzureBlobResource(settings=local.newSettings, provider=variables.provider
+									, storageHandler=variables.storageHandler, logging=variables.logging));
 		}
 		debuglog("azureblobresource listResources end");
 		return arr;
@@ -423,6 +430,7 @@ component accessors="true" {
 
 		debuglog("azureblobresource getInfo #serialize(arguments)#, creating new AzureBlobInfo");
 		local.info = isNull(variables.infoObject) ? new AzureBlobInfo() : variables.infoObject.reinit();
+		local.info.setLogging(variables.logging);
 		local.info.setIsDirectory(variables.storageHandler.directoryExists(variables.settings.getFileName()));
 		if (not local.info.getIsDirectory())
 		{

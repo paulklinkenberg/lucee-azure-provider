@@ -4,14 +4,19 @@ component {
 
 	variables.storageConnectionString="";
 	variables.container = "";
+	variables.logging = false;
 
 
 	function debuglog(txt) {
+		if (not variables.logging)
+			return;
 		log text=txt type="information" file="azure";
 	}
 
 
-	public com.railodeveloper.azure.BlobStorage function init(required String accountName, required String accountKey, required String container, Boolean useHttps=true)
+	public com.railodeveloper.azure.BlobStorage function init(required String accountName, required String accountKey
+															  , required String container, Boolean useHttps=true
+															  , boolean logging=false)
 	{
 		debuglog("BlobStorage init #serialize(arguments)#");
 		// Define the connection-string with your values
@@ -22,6 +27,8 @@ component {
 		variables.container = arguments.container;
 
 		variables.listingEnumSet = createObject('java', 'java.util.EnumSet').noneOf(createJObject('BlobListingDetails').getClass());
+
+		variables.logging = arguments.logging;
 
 		return this;
 	}
