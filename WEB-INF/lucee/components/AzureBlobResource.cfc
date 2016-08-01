@@ -232,6 +232,7 @@ component accessors="true" {
 		debuglog("azureblobresource listResources {}");
 		if (isFile())
 			return nullValue();
+
 		local.path = getInnerPath();
 		if (right(local.path, 1) neq '/')
 			local.path &= '/';
@@ -252,13 +253,15 @@ component accessors="true" {
 
 	public boolean function setLastModified(required datetime lastModified)
 	{
-		debuglog("azureblobresource setLastModified #serialize(arguments)#");
-		if (!isFile())
-			return;
-			// throw("Can't set lastModified date on directory [#getInnerPath()#]. Azure Blob directories do not really exist; they are virtual (by looking at filenames with slashes in them)");
-		local.blob = getInfo().getBlobObject();
-		local.blob.getProperties().setLastModified(arguments.lastModified);
-		local.blob.uploadProperties();
+		debuglog("azureblobresource setLastModified #serialize(arguments)# NOT SUPPORTED");
+		/*
+			if (!isFile())
+				return;
+				// throw("Can't set lastModified date on directory [#getInnerPath()#]. Azure Blob directories do not really exist; they are virtual (by looking at filenames with slashes in them)");
+			local.blob = getInfo().getBlobObject();
+			local.blob.getProperties().setLastModified(arguments.lastModified);
+			local.blob.uploadProperties();
+		*/
 		return true;
 	}
 
@@ -431,11 +434,21 @@ component accessors="true" {
 		debuglog("azureblobresource getInfo #serialize(arguments)#, creating new AzureBlobInfo");
 		local.info = isNull(variables.infoObject) ? new AzureBlobInfo() : variables.infoObject.reinit();
 		local.info.setLogging(variables.logging);
-		local.info.setIsDirectory(variables.storageHandler.directoryExists(variables.settings.getFileName()));
-		if (not local.info.getIsDirectory())
-		{
+		// If there is a dot inside the filename, it's probably a file. Check that first.
+		if (find('.', listLast(variables.settings.getFileName(), '/')) gt 1) {
 			local.info.setBlobObject( variables.storageHandler.getFile(variables.settings.getFileName()) );
 			local.info.setIsFile( local.info.getBlobObject().exists() );
+			if (not local.info.getIsFile()) {
+				local.info.setIsDirectory(variables.storageHandler.directoryExists(variables.settings.getFileName()));
+			}
+		// otherwise, first check if it is a (existing) directory
+		} else {
+			local.info.setIsDirectory(variables.storageHandler.directoryExists(variables.settings.getFileName()));
+			if (not local.info.getIsDirectory())
+			{
+				local.info.setBlobObject( variables.storageHandler.getFile(variables.settings.getFileName()) );
+				local.info.setIsFile( local.info.getBlobObject().exists() );
+			}
 		}
 		return variables.infoObject = local.info;
 	}
